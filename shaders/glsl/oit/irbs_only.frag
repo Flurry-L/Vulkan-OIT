@@ -2,7 +2,7 @@
 //#define MAX_FRAGMENT_COUNT 128
 
 #extension GL_ARB_gpu_shader_int64 : require
-#extension GL_NV_shader_atomic_int64 : require
+#extension GL_EXT_shader_atomic_int64 : enable
 #extension GL_GOOGLE_include_directive : require
 
 #include "bitonic_func.glsl"

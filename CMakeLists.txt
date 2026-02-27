@@ -8,6 +8,10 @@ set(NAME vulkanExamples)
 
 project(${NAME})
 
+if(APPLE)
+	enable_language(OBJCXX)
+endif()
+
 include_directories(external)
 include_directories(external/glm)
 include_directories(external/gli)
@@ -91,7 +95,7 @@ ELSEIF(LINUX)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_XCB_KHR")
 	ENDIF(USE_D2D_WSI)
 ELSEIF(APPLE)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_MACOS_MVK -DVK_EXAMPLE_XCODE_GENERATED")
+	add_definitions(-DVK_USE_PLATFORM_MACOS_MVK -DVK_EXAMPLE_XCODE_GENERATED)
 	# Todo : android?
 ENDIF(WIN32)
 
@@ -138,11 +142,7 @@ endif()
 IF(MSVC)
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
 ELSEIF(APPLE)
-	#if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-	#	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-arc -ObjC++")
-	#ELSE()
-		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-arc -xobjective-c++")
-	#ENDIF()
+	set(CMAKE_OBJCXX_FLAGS "${CMAKE_OBJCXX_FLAGS} -fobjc-arc")
 ENDIF(MSVC)
 
 IF(WIN32)

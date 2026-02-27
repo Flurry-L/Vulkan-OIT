@@ -258,17 +258,38 @@ namespace vks
 		deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());;
 		deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();
 		deviceCreateInfo.pEnabledFeatures = &enabledFeatures;
-        VkPhysicalDeviceVulkan12Features vk12features{};
-        vk12features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
-        vk12features.shaderBufferInt64Atomics = VK_TRUE;
-        deviceCreateInfo.pNext = &vk12features;
+
+		// Only request Vulkan 1.2 optional features when they are supported by the selected device.
+		VkPhysicalDeviceVulkan12Features supportedVk12Features{};
+		supportedVk12Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+		VkPhysicalDeviceFeatures2 supportedFeatures2{};
+		supportedFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+		supportedFeatures2.pNext = &supportedVk12Features;
+		vkGetPhysicalDeviceFeatures2(physicalDevice, &supportedFeatures2);
+
+		VkPhysicalDeviceVulkan12Features requestedVk12Features{};
+		requestedVk12Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+		if (enabledFeatures.shaderInt64 && supportedVk12Features.shaderBufferInt64Atomics) {
+			requestedVk12Features.shaderBufferInt64Atomics = VK_TRUE;
+		}
+
+		void* requestedPNext = nullptr;
+		if (requestedVk12Features.shaderBufferInt64Atomics) {
+			requestedPNext = &requestedVk12Features;
+		}
 		
 		// If a pNext(Chain) has been passed, we need to add it to the device creation info
 		VkPhysicalDeviceFeatures2 physicalDeviceFeatures2{};
-		if (pNextChain) {
+		if (pNextChain || requestedPNext) {
+			if (requestedPNext) {
+				requestedVk12Features.pNext = pNextChain;
+			}
+			else {
+				requestedPNext = pNextChain;
+			}
 			physicalDeviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
 			physicalDeviceFeatures2.features = enabledFeatures;
-			physicalDeviceFeatures2.pNext = pNextChain;
+			physicalDeviceFeatures2.pNext = requestedPNext;
 			deviceCreateInfo.pEnabledFeatures = nullptr;
 			deviceCreateInfo.pNext = &physicalDeviceFeatures2;
 		}

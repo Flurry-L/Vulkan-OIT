@@ -1,6 +1,6 @@
 #version 460
 #extension GL_ARB_gpu_shader_int64 : require
-#extension GL_NV_shader_atomic_int64 : require
+#extension GL_EXT_shader_atomic_int64 : require
 #extension GL_GOOGLE_include_directive : require
 
 #include "shaderCommon.glsl"
@@ -35,19 +35,8 @@ void main()
     ivec2 coord = ivec2(gl_FragCoord.xy);
     const int listPos  = coord.y * renderPassUBO.viewport.x + coord.x;
 
-    // coumpute and store node data
-    vec3 N = normalize(inNormal);
-    vec3 L = normalize(inLightVec);
-    vec3 V = normalize(inViewVec);
-    vec3 R = reflect(-L, N);
-    float diffuse = max(dot(N, L), 0.0);
-    float shininess = 32.f;
-    float specular = pow(max(dot(R, V), 0.0), shininess);
-    float ambient = 0.2f;
-    float cos = max(dot(N, L), 0.0);
-
-    vec4 color = vec4((ambient + cos) * inColor.xyz, 0.5);
-    //vec4 color = vec4((ambient + cos) * vec3(255.f/255, 204.f/255, 153.f/255), 0.5);
+    // Keep material/model RGB unchanged, only control transparency via alpha.
+    vec4 color = vec4(inColor.rgb, inColor.a * pushConsts.color.a);
 
     uint64_t ztest = packUint2x32(uvec2(packUnorm4x8(color), floatBitsToUint(gl_FragCoord.z)));
     for (int i = 0; i < OIT_LAYERS; i++) {

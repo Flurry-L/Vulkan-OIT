@@ -1,6 +1,5 @@
-#pragma optionNV(inline all)
 #extension GL_ARB_gpu_shader_int64 : require
-#extension GL_NV_shader_atomic_int64 : require
+#extension GL_EXT_shader_atomic_int64 : enable
 void CAS(inout uint64_t z0, inout uint64_t z1) {
     if (z0 < z1) {
         uint64_t temp = z0;

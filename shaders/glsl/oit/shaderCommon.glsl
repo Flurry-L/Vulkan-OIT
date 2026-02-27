@@ -1,6 +1,5 @@
-#pragma optionNV(inline all)
 #extension GL_ARB_gpu_shader_int64 : require
-#extension GL_NV_shader_atomic_int64 : require
+#extension GL_EXT_shader_atomic_int64 : enable
 
 void doBlendPacked(inout vec4 color, uint fragment)
 {

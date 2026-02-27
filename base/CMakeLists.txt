@@ -1,6 +1,10 @@
 file(GLOB BASE_SRC "*.cpp" "*.hpp" "*.h" "../external/imgui/*.cpp")
 file(GLOB BASE_HEADERS "*.hpp" "*.h")
 
+if(APPLE)
+	set_source_files_properties(vulkanexamplebase.cpp PROPERTIES LANGUAGE OBJCXX)
+endif()
+
 set(KTX_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../external/ktx)
 set(KTX_SOURCES
     ${KTX_DIR}/lib/texture.c

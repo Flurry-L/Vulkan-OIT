@@ -10,6 +10,7 @@
 #include "VulkanglTFModel.h"
 #include <fstream>
 #include <memory>
+#include <vector>
 #include <shaderc/shaderc.hpp>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -1214,6 +1215,30 @@ public:
         // 将当前帧缓冲的图像复制到临时图像中
         VkCommandBuffer commandBuffer = vulkanDevice->createCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY, true);
 
+        VkImageMemoryBarrier srcBarrier = {};
+        srcBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        srcBarrier.oldLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        srcBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+        srcBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        srcBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        srcBarrier.image = srcImage;
+        srcBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        srcBarrier.subresourceRange.baseMipLevel = 0;
+        srcBarrier.subresourceRange.levelCount = 1;
+        srcBarrier.subresourceRange.baseArrayLayer = 0;
+        srcBarrier.subresourceRange.layerCount = 1;
+        srcBarrier.srcAccessMask = 0;
+        srcBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+
+        vkCmdPipelineBarrier(
+                commandBuffer,
+                VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                0,
+                0, nullptr,
+                0, nullptr,
+                1, &srcBarrier
+        );
+
         VkImageMemoryBarrier barrier = {};
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
         barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -1254,6 +1279,20 @@ public:
                 1, &imageCopyRegion
         );
 
+        srcBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+        srcBarrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        srcBarrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+        srcBarrier.dstAccessMask = 0;
+
+        vkCmdPipelineBarrier(
+                commandBuffer,
+                VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                0,
+                0, nullptr,
+                0, nullptr,
+                1, &srcBarrier
+        );
+
         barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
         barrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
         barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
@@ -1273,7 +1312,40 @@ public:
         // 将图像数据映射到主机内存并保存到文件
         void* data;
         vkMapMemory(device, dstImageMemory, 0, VK_WHOLE_SIZE, 0, &data);
-        stbi_write_png("exported_image.png", width, height, 4, data, 0);
+
+        VkImageSubresource imageSubresource{};
+        imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        imageSubresource.mipLevel = 0;
+        imageSubresource.arrayLayer = 0;
+        VkSubresourceLayout subresourceLayout{};
+        vkGetImageSubresourceLayout(device, dstImage, &imageSubresource, &subresourceLayout);
+
+        const uint8_t* mappedData = static_cast<const uint8_t*>(data) + subresourceLayout.offset;
+        const bool swapBAndR = (swapChain.colorFormat == VK_FORMAT_B8G8R8A8_UNORM) ||
+                               (swapChain.colorFormat == VK_FORMAT_B8G8R8A8_SRGB);
+
+        std::vector<uint8_t> rgbaPixels(static_cast<size_t>(width) * static_cast<size_t>(height) * 4u);
+        for (uint32_t y = 0; y < height; ++y) {
+            const uint8_t* srcRow = mappedData + static_cast<size_t>(y) * subresourceLayout.rowPitch;
+            uint8_t* dstRow = rgbaPixels.data() + static_cast<size_t>(y) * static_cast<size_t>(width) * 4u;
+            for (uint32_t x = 0; x < width; ++x) {
+                const uint8_t* src = srcRow + static_cast<size_t>(x) * 4u;
+                uint8_t* dst = dstRow + static_cast<size_t>(x) * 4u;
+                if (swapBAndR) {
+                    dst[0] = src[2];
+                    dst[1] = src[1];
+                    dst[2] = src[0];
+                    dst[3] = src[3];
+                } else {
+                    dst[0] = src[0];
+                    dst[1] = src[1];
+                    dst[2] = src[2];
+                    dst[3] = src[3];
+                }
+            }
+        }
+
+        stbi_write_png("exported_image.png", width, height, 4, rgbaPixels.data(), static_cast<int>(width) * 4);
         vkUnmapMemory(device, dstImageMemory);
 
         // 清理资源

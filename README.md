@@ -1,6 +1,30 @@
 # Order Independent Transparency Vulkan Demo
 
-从 [Vulkan Examples](https://github.com/SaschaWillems/Vulkan) 修改而来的 OIT 框架，实现了以下算法的切换以及层数调整：
+预览：
+<p align="center">
+  <img src="./assets/all.png" alt="all" width="48%">
+</p>
+
+Linked List 算法保留 4、8、16、32 层：
+<p align="center">
+  <img src="./assets/4.png" alt="4 layers" width="48%">
+  <img src="./assets/8.png" alt="8 layers" width="48%">
+</p>
+
+<p align="center">
+  <img src="./assets/16.png" alt="16 layers" width="48%">
+  <img src="./assets/32.png" alt="32 layers" width="48%">
+</p>
+
+从 [Vulkan Examples](https://github.com/SaschaWillems/Vulkan) 修改而来的 OIT 框架。该仓库是我的本科毕设工作的一部分，编写 Vulkan 框架并复现与对比 OIT 算法、分析其性能瓶颈与加速方式。
+
+## 这个仓库在做什么
+
+- 在统一 Vulkan 框架下实现并切换多种 OIT 算法。
+- 对经典 OIT 做统一评估：画质（SSIM）+ 性能（FPS）。
+- 针对 Linked List 实现三类加速（BMA、RBS、iRBS），并结合 Nsight Graphics 分析瓶颈。
+
+当前实现的核心算法：
 
 - Linked List (Real-Time Concurrent Linked List Construction on the GPU)
     - BMA (Backwards Memory Allocation and Improved OIT)
@@ -8,7 +32,7 @@
     - iRBS (Further improvements to OIT sort performance)
 - Atomic Loop (FreePipe: a programmable parallel rendering architecture for efficient multi-fragment effects)
 
-以下为原仓库 README。
+以下为原仓库 README（保留）。
 
 # Vulkan C++ examples and demos
 

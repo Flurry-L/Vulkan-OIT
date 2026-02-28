@@ -1,4 +1,4 @@
-# Order Independent Transparency Vulkan Demo
+# Vulkan-OIT
 
 预览：
 <p align="center">
@@ -18,7 +18,7 @@ Linked List 算法保留 4、8、16、32 层：
 
 从 [Vulkan Examples](https://github.com/SaschaWillems/Vulkan) 修改而来的 OIT 框架。该仓库是我的本科毕设工作的一部分，编写 Vulkan 框架并复现与对比 OIT 算法、分析其性能瓶颈与加速方式。
 
-## 这个仓库在做什么
+## 功能
 
 - 在统一 Vulkan 框架下实现并切换多种 OIT 算法。
 - 对经典 OIT 做统一评估：画质（SSIM）+ 性能（FPS）。

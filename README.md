@@ -32,6 +32,17 @@ Linked List 算法保留 4、8、16、32 层：
     - iRBS (Further improvements to OIT sort performance)
 - Atomic Loop (FreePipe: a programmable parallel rendering architecture for efficient multi-fragment effects)
 
+## 实验结果
+
+该项目是本科毕业设计项目（《CAD模型的顺序无关透明度渲染研究》），在统一测试环境下（Ryzen 9 7940H + RTX 4060 Laptop，1280×720）完成了两组实验，要点如下：
+
+- 经典算法对比：Linked List 32 层达到 SSIM 0.9995 @ 202 FPS；Atomic Loop 仅需 4 层即可达到 SSIM 0.9959 @ 233 FPS。
+- 128 层参考画质下，朴素 Linked List 为 173 FPS；iRBS 加速后提升至 260 FPS。
+- iRBS 将排序混合渲染通道耗时从 4.24ms 降至 1.39ms，Long Scoreboard 停顿从 60.8% 降至 9.9%。
+- Nsight 分析表明，加速主因是展开排序优化了指令流（SM Throughput 33.4% → 53.8%，L1 命中率 15.7% → 45.8%），而非文献所述的指令缓存友好性。
+
+完整实验报告（含 SSIM/FPS/Nsight 数据表与对比图）见 [docs/report.md](docs/report.md)。
+
 以下为原仓库 README（保留）。
 
 # Vulkan C++ examples and demos
